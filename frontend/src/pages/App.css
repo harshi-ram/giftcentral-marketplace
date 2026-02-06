@@ -1,0 +1,9 @@
+.green-link {
+  color: #8fc2a4; /* Bootstrap's "text-success" green */
+  text-decoration: none;
+}
+
+.green-link:hover {
+  color: #6eb490; /* A darker green on hover */
+  text-decoration: underline;
+}

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Button, Form } from 'react-bootstrap';
 import { toast } from 'react-toastify';
+import { useLocation } from 'react-router-dom';
 import {
   useCreateProductMutation,
   useGetProductDetailsQuery,
@@ -42,6 +43,7 @@ const ProductFormPage = () => {
     useUpdateProductMutation();
   const [uploadProductImage, { isLoading: isUploadImageLoading }] =
     useUploadProductImageMutation();
+  const location = useLocation();
 
   const navigate = useNavigate();
 
@@ -92,16 +94,30 @@ const ProductFormPage = () => {
 
         toast.success(data.message);
       }
-      navigate('/admin/product-list');
+    
+      // Check if the current URL contains `/admin/` or `/manage-listings/` to decide where to redirect
+      if (location.pathname.includes('/admin/')) {
+        navigate('/admin/product-list');
+      } else if (location.pathname.includes('/manage-listings/')) {
+        navigate('/manage-listings');
+      } else {
+        // Default fallback if somehow the path is neither of the above
+        navigate('/');
+      }
+      //navigate('/admin/product-list');
     } catch (error) {
       toast.error(error?.data?.message || error.error);
     }
   };
 
+  const goBackLink = location.pathname.includes('/admin/')
+  ? '/admin/product-list'
+  : '/manage-listings';
+
   return (
     <>
     <Meta title={'Product Form'} />
-      <Link to='/admin/product-list' className='btn btn-light my-3'>
+      <Link to={goBackLink} className='btn btn-light my-3'>
         Go Back
       </Link>
       {(isUpdateProductLoading ||
@@ -166,15 +182,27 @@ const ProductFormPage = () => {
               ></Form.Control>
             </Form.Group>
 
+
             <Form.Group controlId='category'>
-              <Form.Label>Category</Form.Label>
-              <Form.Control
-                type='text'
-                placeholder='Enter category'
+             <Form.Label>Category</Form.Label>
+             <Form.Control
+                as='select'
                 value={category}
-                onChange={e => setCategory(e.target.value)}
-              ></Form.Control>
-            </Form.Group>
+               onChange={e => setCategory(e.target.value)}
+             >
+                 <option value=''>-- Select a category --</option>
+               <option value='Mugs & Drinkware'>Mugs & Drinkware</option>
+               <option value='T-Shirts & Apparel'>T-Shirts & Apparel</option>
+               <option value='Jewelry'>Jewelry</option>
+               <option value='Home Decor'>Home Decor</option>
+               <option value='Stationery'>Stationery</option>
+               <option value='Phone & Tech Accessories'>Phone & Tech Accessories</option>
+               <option value='Bags & Accessories'>Bags & Accessories</option>
+               <option value='Toys & Games'>Toys & Games</option>
+               <option value='Photo Gifts'>Photo Gifts</option>
+               <option value='Crafted Items'>Crafted Items</option>
+             </Form.Control>
+          </Form.Group>
 
             <Form.Group controlId='description'>
               <Form.Label>Description</Form.Label>
@@ -203,3 +231,15 @@ const ProductFormPage = () => {
 };
 
 export default ProductFormPage;
+
+/*
+            <Form.Group controlId='category'>
+              <Form.Label>Category</Form.Label>
+              <Form.Control
+                type='text'
+                placeholder='Enter category'
+                value={category}
+                onChange={e => setCategory(e.target.value)}
+              ></Form.Control>
+            </Form.Group>
+*/

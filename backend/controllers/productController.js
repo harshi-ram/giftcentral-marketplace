@@ -1,45 +1,71 @@
 import Product from '../models/productModel.js';
 import { deleteFile } from '../utils/file.js';
 
-// @desc     Fetch All Products
-// @method   GET
-// @endpoint /api/v1/products?limit=2&skip=0
-// @access   Public
 const getProducts = async (req, res, next) => {
   try {
-    const total = await Product.countDocuments();
     const maxLimit = process.env.PAGINATION_MAX_LIMIT;
-    const maxSkip = total === 0 ? 0 : total - 1;
     const limit = Number(req.query.limit) || maxLimit;
     const skip = Number(req.query.skip) || 0;
     const search = req.query.search || '';
+    const category = req.query.category || '';
 
-    const products = await Product.find({
-      name: { $regex: search, $options: 'i' }
-    })
+    const query = {
+      name: { $regex: search, $options: 'i' },
+    };
+
+    if (category) {
+      query.category = category;
+    }
+
+    const sortOrder = req.query.sortOrder || 'Newest';
+    let sortOption = { createdAt: -1 };
+    if (sortOrder === 'Oldest') sortOption = { createdAt: 1 };
+    else if (sortOrder === 'PriceLowToHigh') sortOption = { price: 1 };
+    else if (sortOrder === 'PriceHighToLow') sortOption = { price: -1 };
+
+    const total = await Product.countDocuments(query);
+    const maxSkip = total === 0 ? 0 : total - 1;
+
+    const products = await Product.find(query)
+      .sort(sortOption)
       .limit(limit > maxLimit ? maxLimit : limit)
       .skip(skip > maxSkip ? maxSkip : skip < 0 ? 0 : skip);
 
-    if (!products || products.length === 0) {
-      res.statusCode = 404;
-      throw new Error('Products not found!');
-    }
-
     res.status(200).json({
       products,
-      total,
+      total, 
       maxLimit,
-      maxSkip
+      maxSkip,
     });
   } catch (error) {
     next(error);
   }
 };
 
-// @desc     Fetch top products
-// @method   GET
-// @endpoint /api/v1/products/top
-// @access   Public
+
+const getUserProducts = async (req, res, next) => {
+  try {
+    const limit = Number(req.query.limit) || 8;
+    const skip = Number(req.query.skip) || 0;
+
+    const query = { user: req.user._id };
+
+    const total = await Product.countDocuments(query);
+    const products = await Product.find(query)
+      .sort({ createdAt: -1 }) 
+      .limit(limit)
+      .skip(skip);
+
+    res.json({
+      products,
+      total,
+      limit
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const getTopProducts = async (req, res, next) => {
   try {
     const products = await Product.find({}).sort({ rating: -1 }).limit(3);
@@ -55,14 +81,10 @@ const getTopProducts = async (req, res, next) => {
   }
 };
 
-// @desc     Fetch Single Product
-// @method   GET
-// @endpoint /api/v1/products/:id
-// @access   Public
 const getProduct = async (req, res, next) => {
   try {
     const { id: productId } = req.params;
-    const product = await Product.findById(productId);
+    const product = await Product.findById(productId).populate('user', 'name');
 
     if (!product) {
       res.statusCode = 404;
@@ -75,10 +97,6 @@ const getProduct = async (req, res, next) => {
   }
 };
 
-// @desc     Create product
-// @method   POST
-// @endpoint /api/v1/products
-// @access   Private/Admin
 const createProduct = async (req, res, next) => {
   try {
     const { name, image, description, brand, category, price, countInStock } =
@@ -102,10 +120,6 @@ const createProduct = async (req, res, next) => {
   }
 };
 
-// @desc     Update product
-// @method   PUT
-// @endpoint /api/v1/products/:id
-// @access   Private/Admin
 const updateProduct = async (req, res, next) => {
   try {
     const { name, image, description, brand, category, price, countInStock } =
@@ -118,7 +132,6 @@ const updateProduct = async (req, res, next) => {
       throw new Error('Product not found!');
     }
 
-    // Save the current image path before updating
     const previousImage = product.image;
 
     product.name = name || product.name;
@@ -131,7 +144,6 @@ const updateProduct = async (req, res, next) => {
 
     const updatedProduct = await product.save();
 
-    // Delete the previous image if it exists and if it's different from the new image
     if (previousImage && previousImage !== updatedProduct.image) {
       deleteFile(previousImage);
     }
@@ -142,10 +154,6 @@ const updateProduct = async (req, res, next) => {
   }
 };
 
-// @desc    Delete product
-// @method   DELETE
-// @endpoint /api/v1/products/:id
-// @access   Admin
 const deleteProduct = async (req, res, next) => {
   try {
     const { id: productId } = req.params;
@@ -156,7 +164,7 @@ const deleteProduct = async (req, res, next) => {
       throw new Error('Product not found!');
     }
     await Product.deleteOne({ _id: product._id });
-    deleteFile(product.image); // Remove upload file
+    deleteFile(product.image); 
 
     res.status(200).json({ message: 'Product deleted' });
   } catch (error) {
@@ -164,10 +172,6 @@ const deleteProduct = async (req, res, next) => {
   }
 };
 
-// @desc    Create product review
-// @method   POST
-// @endpoint /api/v1/products/reviews/:id
-// @access   Admin
 const createProductReview = async (req, res, next) => {
   try {
     const { id: productId } = req.params;
@@ -211,6 +215,51 @@ const createProductReview = async (req, res, next) => {
   }
 };
 
+
+
+const deleteProductReview = async (req, res, next) => {
+  try {
+    const { productId, reviewId } = req.params;
+    console.log('Params:', { productId, reviewId });
+
+    const product = await Product.findById(productId);
+
+    if (!product) {
+      console.log('Product not found');
+      res.status(404);
+      throw new Error('Product not found');
+    }
+
+    console.log('Found product:', product.name);
+
+    const reviewIndex = product.reviews.findIndex(
+      (r) => r._id.toString() === reviewId
+    );
+
+    if (reviewIndex === -1) {
+      console.log('Review not found in product');
+      res.status(404);
+      throw new Error('Review not found');
+    }
+
+    const deletedReview = product.reviews[reviewIndex];
+    product.reviews.splice(reviewIndex, 1);
+
+    product.numReviews = product.reviews.length;
+    product.rating =
+      product.reviews.reduce((acc, item) => item.rating + acc, 0) /
+      (product.reviews.length || 1);
+
+    await product.save();
+    console.log('Deleted review:', deletedReview._id);
+
+    res.status(200).json({ message: 'Review deleted' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
 export {
   getProducts,
   getProduct,
@@ -218,5 +267,7 @@ export {
   updateProduct,
   deleteProduct,
   createProductReview,
-  getTopProducts
+  deleteProductReview, 
+  getTopProducts,
+  getUserProducts
 };

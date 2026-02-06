@@ -1,52 +1,35 @@
 import React, { useState } from 'react';
-import {
-  Form,
-  Button,
-  InputGroup,
-  OverlayTrigger,
-  Tooltip
-} from 'react-bootstrap';
-import { FaSearch, FaTimes } from 'react-icons/fa';
-import { useDispatch } from 'react-redux';
-import { searchProduct, clearSearch } from '../slices/searchProductSlice';
+import { Form, Button } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
 
-function SearchBox() {
-  const [input, setInput] = useState('');
+const SearchBox = () => {
+  const [keyword, setKeyword] = useState('');
+  const navigate = useNavigate();
 
-  const dispatch = useDispatch();
-
-  const searchProductHandler = e => {
+  const submitHandler = (e) => {
     e.preventDefault();
-    dispatch(searchProduct(input));
+    if (keyword.trim()) {
+      navigate(`/search?q=${encodeURIComponent(keyword)}`);
+    } else {
+      navigate('/');
+    }
   };
 
-  const clearSearchHandler = () => {
-    dispatch(clearSearch());
-    setInput('');
-  };
   return (
-    <Form onSubmit={searchProductHandler} className='d-flex'>
-      <InputGroup>
-        <Form.Control
-          size='sm'
-          type='text'
-          value={input}
-          onChange={e => setInput(e.target.value)}
-          placeholder='Search Products...'
-        />
-        {input === '' ? (
-          ''
-        ) : (
-          <Button type='button' variant='light' onClick={clearSearchHandler}>
-            <FaTimes />
-          </Button>
-        )}
-        <Button type='submit' variant='warning'>
-          <FaSearch />
-        </Button>
-      </InputGroup>
+    <Form onSubmit={submitHandler} className="d-flex">
+      <Form.Control
+        type="text"
+        name="q"
+        onChange={(e) => setKeyword(e.target.value)}
+        value={keyword}
+        placeholder="Search products or users..."
+        className="mr-sm-2 ml-sm-5"
+      ></Form.Control>
+      <Button type="submit" variant="outline-success" className="p-2">
+        Search
+      </Button>
     </Form>
   );
-}
+};
 
 export default SearchBox;

@@ -1,36 +1,63 @@
 import mongoose from 'mongoose';
 
-// Define the schema for users
 const userSchema = new mongoose.Schema(
   {
-    // User's name
+    customId: {
+      type: Number,
+      unique: true,
+      index: true,
+      
+    },
     name: {
       type: String,
-      required: true
+      required: true,
+      unique: true
+      
     },
-    // User's email, must be unique
     email: {
       type: String,
       required: true,
       unique: true
     },
-    // User's password
     password: {
       type: String,
       required: true
     },
-    // Indicates whether the user is an admin or not
     isAdmin: {
       type: Boolean,
       required: true,
       default: false
-    }
+    },
+    avatar: {
+      url: { type: String },
+      public_id: { type: String }
+    },
+    bio: {
+      type: String,
+      maxlength: 300,
+      default: ''
+    },
+   profilePic: {
+     type: String,
+     default: '',
+   },
+
+    profileLink: {
+      type: String
+    },
+
+    
   },
-  { timestamps: true } // Adds createdAt and updatedAt timestamps
+  { timestamps: true } 
 );
 
-// Create the User model
+userSchema.pre('save', async function (next) {
+  if (this.isNew) {
+    const lastUser = await mongoose.model('User').findOne({}, {}, { sort: { customId: -1 } });
+    this.customId = lastUser?.customId ? lastUser.customId + 1 : 1;
+  }
+  next();
+});
 const User = mongoose.model('User', userSchema);
 
-// Export the User model
 export default User;

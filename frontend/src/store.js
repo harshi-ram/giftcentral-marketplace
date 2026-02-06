@@ -1,24 +1,30 @@
-// Import necessary functions and slices from Redux Toolkit
 import { configureStore } from '@reduxjs/toolkit';
 import { apiSlice } from './slices/apiSlice';
 import cartSliceReducer from './slices/cartSlice';
 import authSliceReducer from './slices/authSlice';
 import searchProductSliceReducer from './slices/searchProductSlice';
-
-// Configure the Redux store
+import searchUserReducer from './slices/searchUserSlice';
+import chatReducer from './slices/chatSlice'; 
+import openChatsReducer from './slices/openChatsSlice';
+import giftRequestsReceivedReducer from './slices/giftRequestsReceivedSlice';
+import giftRequestsSentReducer from './slices/giftRequestsSentSlice';
+import mailboxReducer from './slices/mailboxSlice';
 const store = configureStore({
-  // Combine reducers for different slices
   reducer: {
-    [apiSlice.reducerPath]: apiSlice.reducer, // API-related state reducer
-    cart: cartSliceReducer, // Shopping cart state reducer
-    auth: authSliceReducer, // Authentication state reducer
-    search: searchProductSliceReducer
+    [apiSlice.reducerPath]: apiSlice.reducer, 
+    cart: cartSliceReducer, 
+    auth: authSliceReducer, 
+    search: searchProductSliceReducer,
+    searchUser: searchUserReducer,
+    chat: chatReducer,
+    openChats: openChatsReducer,
+    giftRequestsReceived: giftRequestsReceivedReducer,
+    giftRequestsSent: giftRequestsSentReducer,
+    mailbox: mailboxReducer
   },
 
-  // Add middleware to the Redux store
   middleware: getDefaultMiddleware =>
-    getDefaultMiddleware().concat(apiSlice.middleware) // Add API middleware
+    getDefaultMiddleware().concat(apiSlice.middleware) 
 });
 
-// Export the configured Redux store for use in the application
 export default store;

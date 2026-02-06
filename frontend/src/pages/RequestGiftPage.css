@@ -1,0 +1,186 @@
+/* RequestGiftPage.css */
+
+.request-gift-page {
+  min-height: 100vh;
+  /* Matching the light mint background from profile */
+  background-color: #f9fff9; 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.content-wrapper {
+  width: 100%;
+  max-width: 56rem;
+}
+
+/* Loading State */
+.loading-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: #f9fff9;
+  gap: 1rem;
+}
+
+.spinner {
+  width: 3rem;
+  height: 3rem;
+  border: 3px solid #ccc;
+  border-top-color: #10b981; /* Green spinner */
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.header-section {
+  text-align: left;
+  margin-bottom: 40px; /* This creates the gap you want */
+  padding: 10px 0;
+}
+
+/* Header & Form Cards */
+.header-card, .form-card {
+  background: white;
+  /* Matching the profile box-shadow and border */
+  box-shadow: 0 0 10px green; 
+  padding: 2.5rem;
+  margin-bottom: 2rem;
+  border: 1px solid grey;
+  border-radius: 8px;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.avatar {
+  width: 5rem;
+  height: 5rem;
+  background-color: #eee;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #333;
+  font-weight: bold;
+  font-size: 2rem;
+  /* Matching profile image border */
+  border: 2px solid grey; 
+  border-radius: 4px;
+}
+
+.header-text {
+  flex: 1;
+}
+
+.main-title {
+  font-size: 2rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 0.5rem 0;
+}
+
+.subtitle {
+  font-size: 1.125rem;
+  color: #666;
+  margin: 0;
+}
+
+.seller-name {
+  font-weight: 600;
+  /* Changed from pink to the Green theme */
+  color: #ec4899; 
+}
+
+/* Form Styles */
+.gift-form {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.form-label {
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: #333;
+}
+
+.form-textarea, .form-input {
+  width: 100%;
+  padding: 1rem;
+  border: 1px solid #ccc; /* Matching profile UI borders */
+  background-color: #fff;
+  border-radius: 4px;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.form-textarea{
+  min-height: 18rem;
+}
+
+.form-textarea:focus, .form-input:focus {
+  outline: none;
+  border-color: green;
+  box-shadow: 0 0 5px rgba(0, 128, 0, 0.2);
+}
+
+.budget-input-wrapper {
+  position: relative;
+}
+
+.currency-symbol {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #666;
+  font-weight: 600;
+}
+
+.form-input {
+  padding-left: 2.5rem;
+}
+
+/* Submit Button - Matching "Chat" button style */
+.submit-button {
+  width: 100%;
+  padding: 1.125rem;
+  font-weight: bold;
+  font-size: 1.125rem;
+  color: #333;
+  background-color: #e0ffe0; /* Mint green from profile button */
+  border: 1px solid #ccc;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.submit-button:hover:not(:disabled) {
+  background-color: #c2ffc2;
+  box-shadow: 0 2px 4px rgba(0, 128, 0, 0.1);
+}
+
+.submit-button:disabled {
+  background-color: #eee;
+  color: #999;
+  cursor: not-allowed;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .header-card, .form-card {
+    padding: 1.5rem;
+    max-width: 95%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}

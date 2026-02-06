@@ -6,7 +6,9 @@ import {
   createProduct,
   updateProduct,
   createProductReview,
-  getTopProducts
+  deleteProductReview, 
+  getTopProducts,
+  getUserProducts
 } from '../controllers/productController.js';
 import { protect, admin } from '../middleware/authMiddleware.js';
 import validateRequest from '../middleware/validator.js';
@@ -79,18 +81,23 @@ const validator = {
       .isNumeric()
       .withMessage('Count in stock must be a number'),
     param('id').notEmpty().withMessage('Id is required').isMongoId().withMessage('Invalid Id Format')
+  ],
+  deleteProductReview: [ 
+    param('id').notEmpty().withMessage('Id is required').isMongoId().withMessage('Invalid Id Format')
   ]
 }
 
 router.route('/')
-  .post(validator.createProduct, validateRequest, protect, admin, createProduct)
+  .post(validator.createProduct, validateRequest, protect, createProduct) 
   .get(validator.getProducts, validateRequest, getProducts);
 router.get('/top', getTopProducts);
 router.post('/reviews/:id', validator.createProductReview, validateRequest, protect, createProductReview);
+router.delete('/:productId/reviews/:reviewId', protect,  deleteProductReview);
+router.get('/my-products', protect, getUserProducts);
 router
   .route('/:id')
   .get(validator.getProduct, validateRequest, getProduct)
-  .put(validator.updateProduct, validateRequest, protect, admin, updateProduct)
-  .delete(validator.deleteProduct, validateRequest, protect, admin, deleteProduct);
+  .put(validator.updateProduct, validateRequest, protect, updateProduct) 
+  .delete(validator.deleteProduct, validateRequest, protect, deleteProduct); 
 
 export default router;

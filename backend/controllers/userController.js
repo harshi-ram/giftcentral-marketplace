@@ -3,12 +3,124 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { generateToken } from '../utils/generateToken.js';
 import transporter from '../config/email.js';
-// @desc     Auth user & get token
-// @method   POST
-// @endpoint /api/users/login
-// @access   Public
+import asyncHandler from 'express-async-handler';
+
+const searchUsers = asyncHandler(async (req, res) => {
+  const keyword = req.query.keyword || '';
+  const limit = Number(req.query.limit) || 10; 
+  const page = Number(req.query.page) || 1;
+  const skip = (page - 1) * limit;
+
+  const filter = {
+    name: { $regex: keyword, $options: 'i' },
+  };
+
+  const total = await User.countDocuments(filter);
+
+  const users = await User.find(filter)
+    .select('name _id email profilePic bio') 
+    .skip(skip)
+    .limit(limit)
+    .sort({ createdAt: -1 }); 
+
+  res.json({
+    users,
+    total,
+    page,
+    pages: Math.ceil(total / limit),
+  });
+});
+
+const getUserByName = asyncHandler(async (req, res) => {
+  const user = await User.findOne({ name: req.params.name }).select('-password');
+
+  if (user) {
+    res.json(user);
+  } else {
+    res.status(404);
+    throw new Error('User not found');
+  }
+});
+
+const updateUserBio = async (req, res) => {
+  const userId = req.user._id;
+
+  console.log("Received bio update request");
+  console.log("req.body:", req.body);
+  console.log("req.user:", req.user);
+  const { bio } = req.body;
+
+   if (!bio || typeof bio !== 'string') {
+    return res.status(400).json({ message: 'Bio is required and must be a string' });
+  }
+
+  try {
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    user.bio = bio || '';
+    await user.save();
+
+    res.status(200).json({ message: 'Bio updated successfully', bio: user.bio });
+  } catch (error) {
+    console.error("❌ Server error in updateUserBio:", error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+const uploadProfileImage = asyncHandler(async (req, res) => {
+  console.log('📸 Hit uploadProfileImage route');
+  if (!req.file) {
+    console.log('⚠️ No file received');
+    res.status(400);
+    throw new Error('No file uploaded');
+  }
+
+  console.log('🧑 req.user:', req.user);
+  console.log('📂 req.file:', req.file);
+
+  const user = await User.findById(req.user._id);
+  console.log('Updated from DB:', user);
+  if (!user) {
+    res.status(404);
+    throw new Error('User not found');
+  }
+
+  user.profilePic = `/pfpuploads/${req.file.filename}`;
+  await user.save();
+  console.log("✅ ProfilePic saved as:", user.profilePic);
+
+  res.status(200).json({
+    message: 'Profile picture uploaded successfully',
+    profilePic: user.profilePic,
+  });
+});
+
+const removeProfileImage = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+  if (!user) {
+    res.status(404);
+    throw new Error('User not found');
+  }
+
+  const fs = await import('fs');
+  const path = await import('path');
+
+  if (user.profilePic) {
+    const imagePath = path.resolve(`.${user.profilePic}`); 
+    if (fs.existsSync(imagePath)) {
+      fs.unlinkSync(imagePath); 
+    }
+    user.profilePic = '';
+    await user.save();
+  }
+
+  res.status(200).json({ message: 'Profile picture removed' });
+});
+
 const loginUser = async (req, res, next) => {
   try {
+    console.log("login stuff works");
     const { email, password } = req.body;
 
     const user = await User.findOne({ email });
@@ -43,10 +155,6 @@ const loginUser = async (req, res, next) => {
   }
 };
 
-// @desc     Register user
-// @method   POST
-// @endpoint /api/users
-// @access   Public
 const registerUser = async (req, res, next) => {
   try {
     const { name, email, password } = req.body;
@@ -82,20 +190,14 @@ const registerUser = async (req, res, next) => {
   }
 };
 
-// @desc     Logout user / clear cookie
-// @method   POST
-// @endpoint /api/users/logout
-// @access   Private
 const logoutUser = (req, res) => {
-  res.clearCookie('jwt', { httpOnly: true });
-
-  res.status(200).json({ message: 'Logout successful' });
+  res.cookie('jwt', '', {
+    httpOnly: true,
+    expires: new Date(0), 
+  });
+  res.status(200).json({ message: 'Logged out successfully' });
 };
 
-// @desc     Get user profile
-// @method   GET
-// @endpoint /api/users/profile
-// @access   Private
 const getUserProfile = async (req, res, next) => {
   try {
     const user = await User.findById(req.user._id);
@@ -110,17 +212,16 @@ const getUserProfile = async (req, res, next) => {
       userId: user._id,
       name: user.name,
       email: user.email,
-      isAdmin: user.isAdmin
+      isAdmin: user.isAdmin,
+      profilePic: user.profilePic || '',
+      bio: user.bio,
+      customId: user.customId
     });
   } catch (error) {
     next(error);
   }
 };
 
-// @desc     Get admins
-// @method   GET
-// @endpoint /api/users/admins
-// @access   Private/Admin
 const admins = async (req, res, next) => {
   try {
     const admins = await User.find({ isAdmin: true });
@@ -135,10 +236,6 @@ const admins = async (req, res, next) => {
   }
 };
 
-// @desc     Get users
-// @method   GET
-// @endpoint /api/users
-// @access   Private/Admin
 const getUsers = async (req, res, next) => {
   try {
     const users = await User.find({ isAdmin: false });
@@ -152,10 +249,7 @@ const getUsers = async (req, res, next) => {
     next(error);
   }
 };
-// @desc     Get user
-// @method   GET
-// @endpoint /api/users/:id
-// @access   Private/Admin
+
 const getUserById = async (req, res, next) => {
   try {
     const { id: userId } = req.params;
@@ -172,10 +266,6 @@ const getUserById = async (req, res, next) => {
   }
 };
 
-// @desc     Update user
-// @method   PUT
-// @endpoint /api/users/:id
-// @access   Private/Admin
 const updateUser = async (req, res, next) => {
   try {
     const { name, email, isAdmin } = req.body;
@@ -199,10 +289,6 @@ const updateUser = async (req, res, next) => {
   }
 };
 
-// @desc     Update user profile
-// @method   PUT
-// @endpoint /api/users/profile
-// @access   Private
 const updateUserProfile = async (req, res, next) => {
   try {
     const { name, email, password } = req.body;
@@ -236,10 +322,6 @@ const updateUserProfile = async (req, res, next) => {
   }
 };
 
-// @desc     Delete user
-// @method   DELETE
-// @endpoint /api/users/:id
-// @access   Private/Admin
 const deleteUser = async (req, res, next) => {
   try {
     const { id: userId } = req.params;
@@ -255,10 +337,6 @@ const deleteUser = async (req, res, next) => {
   }
 };
 
-// @desc     Send reset password email
-// @method   POST
-// @endpoint /api/users/reset-password/request
-// @access   Public
 const resetPasswordRequest = async (req, res, next) => {
   try {
     const { email } = req.body;
@@ -298,10 +376,6 @@ const resetPasswordRequest = async (req, res, next) => {
   }
 };
 
-// @desc     Reset password
-// @method   POST
-// @endpoint /api/users/reset-password/reset/:id/:token
-// @access   Private
 const resetPassword = async (req, res, next) => {
   try {
     const { password } = req.body;
@@ -336,5 +410,11 @@ export {
   deleteUser,
   admins,
   resetPasswordRequest,
-  resetPassword
+  resetPassword,
+  uploadProfileImage,
+  removeProfileImage,
+  updateUserBio,
+  getUserByName,
+  searchUsers
+  
 };

@@ -11,11 +11,42 @@ import {
   getUserById,
   admins,
   resetPasswordRequest,
-  resetPassword
+  resetPassword,
+  uploadProfileImage,
+  removeProfileImage,
+  updateUserBio,
+  getUserByName,
+  searchUsers,
 } from '../controllers/userController.js';
 import { protect, admin } from '../middleware/authMiddleware.js';
 import validateRequest from '../middleware/validator.js';
 import {body, param} from 'express-validator';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
+
+const __dirname = path.resolve(); 
+const profilePicFolder = path.join(__dirname, 'pfpuploads');
+
+if (!fs.existsSync(profilePicFolder)) {
+  fs.mkdirSync(profilePicFolder, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, profilePicFolder);
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}-${file.originalname}`);
+  }
+});
+
+const fileFilter = (req, file, cb) => {
+  const isImage = file.mimetype.startsWith('image/');
+  cb(isImage ? null : new Error('Only image files are allowed'), isImage);
+};
+
+const upload = multer({ storage, fileFilter });
 
 const router = express.Router();
 const validator = {
@@ -65,10 +96,26 @@ router
   .get(protect, getUserProfile)
   .put(validator.checkNewUser, validateRequest, protect, updateUserProfile);
 
+router.put('/update-bio', protect, updateUserBio);
+router.get('/name/:name', getUserByName); 
+
+router.get('/search', searchUsers);
+
+
 router
   .route('/:id')
   .get(validator.checkGetUserById, validateRequest, protect, admin, getUserById)
   .put(validator.checkUpdateUser, validateRequest, protect, admin, updateUser)
   .delete(validator.checkGetUserById, validateRequest, protect, admin, deleteUser);
+
+
+router.post(
+  '/profile/upload',
+  protect,
+  upload.single('file'),
+  uploadProfileImage
+);
+
+router.delete('/profile/remove', protect, removeProfileImage);
 
 export default router;

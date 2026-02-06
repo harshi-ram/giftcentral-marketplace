@@ -12,7 +12,6 @@ import {
   Button,
   ListGroupItem
 } from 'react-bootstrap';
-import { FaIndianRupeeSign } from 'react-icons/fa6';
 
 import Message from '../components/Message';
 import { addToCart, removeFromCart } from '../slices/cartSlice';
@@ -43,7 +42,7 @@ const CartPage = () => {
         <Col md={8}>
           {cartItems.length === 0 && (
             <Message>
-              Your cart is empty 👉 <Link to='/'>Go Back</Link>
+              Your cart is empty. <Link style={{color: '#22c55e'}} to='/'>Go Back</Link>
             </Message>
           )}
           <ListGroup variant='flush'>
@@ -109,16 +108,21 @@ const CartPage = () => {
                   )}
                 </ListGroup.Item>
                 <ListGroupItem>
-                  <Button
-                    className='w-100'
-                    variant='warning'
-                    type='button'
-                    disabled={cartItems.length === 0}
-                    onClick={checkoutHandler}
-                  >
-                    Proceed To Checkout
-                  </Button>
-                </ListGroupItem>
+  <Button
+    className='w-100'
+    type='button'
+    disabled={cartItems.length === 0}
+    onClick={checkoutHandler}
+    style={{
+      backgroundColor: 'rgb(252, 228, 236)',
+      borderColor: 'rgb(252, 228, 236)',
+      color: 'black'
+    }}
+  >
+    Proceed To Checkout
+  </Button>
+</ListGroupItem>
+
               </ListGroup>
             </Card>
           )}
@@ -129,3 +133,4 @@ const CartPage = () => {
 };
 
 export default CartPage;
+

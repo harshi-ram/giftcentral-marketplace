@@ -7,7 +7,6 @@ import { setCredentials } from '../slices/authSlice';
 import { toast } from 'react-toastify';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import FormContainer from '../components/FormContainer';
-import Loader from '../components/Loader';
 import Meta from '../components/Meta';
 
 const RegisterPage = () => {
@@ -120,7 +119,7 @@ const RegisterPage = () => {
         </Form.Group>
         <Button
           className='mb-3 w-100'
-          variant='warning'
+          style={{ backgroundColor: '#fce4ec', borderColor: '#fce4ec', color: '#000000'}}
           type='submit'
           disabled={isLoading}
         >

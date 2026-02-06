@@ -16,8 +16,11 @@ import AdminRoute from '../components/AdminRoute';
 import OrderListPage from '../pages/admin/OrderListPage';
 import ProductListPage from '../pages/admin/ProductListPage';
 import UserListPage from '../pages/admin/UserListPage';
-// import CreateProductPage from '../pages/admin/CreateProductPage';
-// import UpdateProductPage from '../pages/admin/UpdateProductPage';
+import MyProfilePage from '../pages/MyProfilePage';
+import CategoryPage from '../pages/CategoryPage';
+import ManageListingsPage from '../pages/ManageListingsPage';
+import UserProductEditPage from '../pages/UserProductEditPage';
+import AddProductPage from '../pages/AddProductPage';
 import ProductFormPage from '../pages/admin/ProductFormPage';
 import UpdateUserFormPage from '../pages/admin/UpdateUserFormPage';
 import NotFoundPage from '../pages/NotFoundPage';
@@ -28,6 +31,10 @@ import AdminProfilePage from '../pages/admin/AdminProfilePage';
 import AdminListPage from '../pages/admin/AdminListPage';
 import ResetPasswordRequestPage from '../pages/ResetPasswordRequestPage';
 import ResetPasswordPage from '../pages/ResetPasswordPage';
+import RequestGiftPage from '../pages/RequestGiftPage';
+import GiftRequestsReceivedPage from '../pages/GiftRequestsReceivedPage';
+import MailboxPage from '../pages/MailboxPage';
+import SearchPage from '../pages/SearchPage';
 
 const router = createBrowserRouter([
   {
@@ -38,6 +45,10 @@ const router = createBrowserRouter([
         index: true,
         path: '/',
         element: <HomePage />
+      },
+      {
+        path: '/category/:categoryName',
+        element: <CategoryPage />
       },
       {
         path: '/product/:id',
@@ -64,6 +75,14 @@ const router = createBrowserRouter([
         element: <RegisterPage />
       },
       {
+        path: '/users/:name', 
+        element: <MyProfilePage />
+      },
+      {
+        path: '/search',
+        element: <SearchPage />
+      },
+      {
         path: '',
         element: <PrivateRoute />,
         children: [
@@ -86,7 +105,33 @@ const router = createBrowserRouter([
           {
             path: '/profile',
             element: <ProfilePage />
-          }
+          },
+          {
+            path: '/add-product',
+            element: <AddProductPage />
+          },
+          {
+            path: '/manage-listings',
+            element: <ManageListingsPage />
+          },
+          {
+            path: "/product/update/:id",
+            element: <UserProductEditPage />
+
+          },
+          {
+             path: "/request-gift/:sellerName",
+             element: <RequestGiftPage />
+          }, 
+          {
+             path: "/gift-requests",
+             element: <GiftRequestsReceivedPage />
+          }, 
+          {
+             path: "/mailbox",
+             element: <MailboxPage />
+          }, 
+
         ]
       }
     ]

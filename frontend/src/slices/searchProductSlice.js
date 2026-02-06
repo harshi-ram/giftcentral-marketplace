@@ -16,8 +16,6 @@ export const searchProductSlice = createSlice({
     }
   }
 });
-
-// Action creators are generated for each case reducer function
 export const { searchProduct, clearSearch } = searchProductSlice.actions;
 
 export default searchProductSlice.reducer;

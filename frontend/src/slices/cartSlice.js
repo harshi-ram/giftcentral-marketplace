@@ -40,6 +40,13 @@ const cartSlice = createSlice({
     clearCartItems: (state, action) => {
       state.cartItems = [];
       return updateCart(state);
+    },
+    resetCart: (state) => {
+      state.cartItems = [];
+      state.shippingAddress = {};
+      state.paymentMethod = 'Razorpay';
+      localStorage.removeItem('cart');
+      return updateCart(state);
     }
   }
 });
@@ -49,7 +56,8 @@ export const {
   removeFromCart,
   saveShippingAddress,
   savePaymentMethod,
-  clearCartItems
+  clearCartItems,
+  resetCart
 } = cartSlice.actions;
 
 export default cartSlice.reducer;

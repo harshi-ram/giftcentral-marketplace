@@ -46,7 +46,7 @@ const Payment = () => {
             ></Form.Check>
           </Col>
         </Form.Group>
-        <Button className='mb-3 w-100' variant='warning' type='submit'>
+        <Button className='mb-3 w-100' style={{ backgroundColor: '#fce4ec', borderColor: '#fce4ec', color: '#000000'}} type='submit'>
           Continue
         </Button>
       </Form>

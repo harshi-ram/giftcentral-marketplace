@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Button, Card } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
@@ -7,48 +7,54 @@ import { addToCart } from '../slices/cartSlice';
 import Rating from './Rating';
 
 const Product = ({ product }) => {
-  const [qty, setQty] = useState(1);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const addToCartHandler = () => {
-    dispatch(addToCart({ ...product, qty }));
+  const addToCartHandler = (e) => {
+    e.preventDefault(); 
+    dispatch(addToCart({ ...product, qty: 1 }));
     navigate('/cart');
   };
+
   return (
-    <Card className='my-3 p-3 rounded text-center'>
-      <Link
-        to={`/product/${product._id}`}
-        style={{ textDecoration: 'none' }}
-        className='text-dark'
-      >
-        <Card.Img
-          variant='top'
-          src={product.image}
-          style={{ height: '200px', objectFit: 'contain' }}
-        />
-        <Card.Body>
-          <Card.Title as='div' className='product-title'>
-            <strong>{product.name}</strong>
+    <Card className='my-3 p-1 rounded product-card shadow-sm'>
+      <Link to={`/product/${product._id}`} className='text-decoration-none'>
+        <div className="img-container p-2">
+          <Card.Img
+            src={product.image}
+            variant='top'
+            style={{ height: '180px', objectFit: 'contain' }}
+          />
+        </div>
+
+        <Card.Body className="d-flex flex-column align-items-center">
+          <Card.Title as='div' className='product-title mb-2'>
+            <strong className="text-dark">{product.name}</strong>
           </Card.Title>
 
-          <Card.Text as='div' className='mb-3'>
-            <Rating
-              value={product.rating}
-              text={`(${product.numReviews} reviews)`}
-            />
+          <div className='mb-2'>
+            <Rating value={product.rating} text={`${product.numReviews}`} />
+          </div>
+
+          <Card.Text as='h4' className="mb-3" style={{ color: '#e91e63', fontWeight: 'bold' }}>
+            {addCurrency(product.price)}
           </Card.Text>
-          <Card.Text as='h3'>{addCurrency(product.price)}</Card.Text>
+
+          <Button
+            className='w-100 mt-auto'
+            variant='outline-primary'
+            disabled={product.countInStock === 0}
+            onClick={addToCartHandler}
+            style={{ 
+              backgroundColor: '#fce4ec', 
+              color: '#000000', 
+              border: '1px solid #fce4ec'
+            }}
+          >
+            {product.countInStock === 0 ? 'Out of Stock' : 'Add to Cart'}
+          </Button>
         </Card.Body>
       </Link>
-      <Button
-        variant='warning'
-        type='button'
-        disabled={product.countInStock === 0}
-        onClick={addToCartHandler}
-      >
-        Add To Cart
-      </Button>
     </Card>
   );
 };
